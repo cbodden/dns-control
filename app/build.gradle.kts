@@ -15,7 +15,7 @@ android {
         applicationId = "com.dnscontrol"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
+        versionCode = 4
         versionName = "0.3"
         
         val buildTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())

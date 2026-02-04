@@ -12,6 +12,7 @@ A modern Android application for controlling DNS blocking on Technitium DNS Serv
 - **Auto-Connect** - Automatically checks server connectivity and fetches status on app launch
 - **Relative Time Display** - Shows resume time in human-readable format ("in 5 min", "in 1h 30m")
 - **Modern UI** - Beautiful Material 3 dark theme with bottom navigation and smooth animations
+- **GitHub Link** - Quick access to the project repository from Settings
 - **Lightweight** - Minimal permissions, no background services, no tracking
 
 ## Screenshots

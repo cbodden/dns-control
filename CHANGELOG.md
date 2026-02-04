@@ -17,11 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Time picker for selecting start and end times
   - Apply button to fetch stats for the custom range
 - **Flexible Stats Time Periods** - Choose from Last Hour, Day, Week, Month, Year, or Custom
+- **GitHub Link** - Clickable link to project repository in Settings under build info
 
 ### Changed
 - Stats dropdown now includes all time period options
 - Settings UI reorganized with saved servers section at top
 - Improved date/time formatting for custom range display
+- Build number incremented
 
 ### Removed
 - GitHub Actions workflow (build.yml)
