@@ -127,28 +127,6 @@ This app communicates with Technitium DNS Server using the following API endpoin
 | `/api/settings/temporaryDisableBlocking` | GET | Temporarily disable DNS blocking |
 | `/api/dashboard/stats/get` | GET | Retrieve dashboard statistics for the last hour |
 
-### Example API Calls
-
-**Check Status:**
-```
-GET http://your-server:5380/api/settings/get?token=YOUR_TOKEN
-```
-
-**Disable Blocking (5 minutes):**
-```
-GET http://your-server:5380/api/settings/temporaryDisableBlocking?token=YOUR_TOKEN&minutes=5
-```
-
-**Get Dashboard Stats (Last Hour):**
-```
-GET http://your-server:5380/api/dashboard/stats/get?token=YOUR_TOKEN&type=LastHour&utc=true
-```
-
-**Get Dashboard Stats (Custom Range):**
-```
-GET http://your-server:5380/api/dashboard/stats/get?token=YOUR_TOKEN&type=Custom&start=2024-01-01T00:00:00Z&end=2024-01-31T23:59:59Z&utc=true
-```
-
 ## Project Structure
 
 ```
@@ -218,16 +196,6 @@ No location, camera, storage, or other sensitive permissions required.
 - The app reads the `enableBlocking` field from the Technitium API response
 - Use the "Check Status" button to manually refresh
 - Check the raw JSON in the debug section to verify server response
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ## License
 
