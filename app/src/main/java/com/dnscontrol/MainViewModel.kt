@@ -208,6 +208,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(lastError = null, lastSuccess = null) }
     }
     
+    fun updateShowDebug(show: Boolean) {
+        viewModelScope.launch {
+            settingsDataStore.updateShowDebug(show)
+        }
+    }
+    
     fun fetchDashboardStats() {
         val settings = _uiState.value.settings
         if (settings.serverUrl.isEmpty() || settings.apiToken.isEmpty()) {

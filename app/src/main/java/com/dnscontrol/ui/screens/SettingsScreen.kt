@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Timer
@@ -31,7 +32,8 @@ fun SettingsScreen(
     settings: AppSettings,
     onServerUrlChange: (String) -> Unit,
     onApiTokenChange: (String) -> Unit,
-    onDisableMinutesChange: (Int) -> Unit
+    onDisableMinutesChange: (Int) -> Unit,
+    onShowDebugChange: (Boolean) -> Unit
 ) {
     var serverUrl by remember(settings) { mutableStateOf(settings.serverUrl) }
     var apiToken by remember(settings) { mutableStateOf(settings.apiToken) }
@@ -147,6 +149,42 @@ fun SettingsScreen(
                         Text("1 min", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text("120 min", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                }
+            }
+            
+            // Debug Settings
+            SettingsSection(title = "Debug") {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.BugReport,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Show Debug Window",
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Display raw JSON response on Control tab",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = settings.showDebug,
+                        onCheckedChange = onShowDebugChange
+                    )
                 }
             }
             

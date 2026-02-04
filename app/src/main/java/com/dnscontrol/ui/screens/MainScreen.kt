@@ -48,6 +48,7 @@ fun MainScreen(
     isLoading: Boolean,
     lastError: String?,
     lastSuccess: String?,
+    showDebug: Boolean,
     onDisableBlocking: () -> Unit,
     onCheckStatus: () -> Unit,
     onRefresh: () -> Unit,
@@ -201,8 +202,8 @@ fun MainScreen(
                         }
                     }
                     
-                    // Debug: Raw JSON Response
-                    statusResponse?.let { response ->
+                    // Debug: Raw JSON Response (only show if enabled in settings)
+                    if (showDebug) statusResponse?.let { response ->
                         val clipboardManager = LocalClipboardManager.current
                         var copied by remember { mutableStateOf(false) }
                         

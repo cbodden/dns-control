@@ -77,6 +77,7 @@ On first launch, tap the **Settings** icon to configure:
 | **Server URL** | Your Technitium DNS server address (without `http://`) | `dns.example.com:5380` |
 | **API Token** | Your Technitium API authentication token | `abc123...` |
 | **Disable Duration** | How long to disable blocking (1-120 minutes) | `5` |
+| **Show Debug Window** | Display raw JSON response on Control tab | `Off` |
 
 ### Getting Your API Token
 
@@ -100,7 +101,7 @@ On first launch, tap the **Settings** icon to configure:
    - Blocking stats (blocked, dropped)
    - Server info (clients, zones, cached entries)
    - Zone lists (allowed/blocked zones, allow/block list counts)
-4. **Settings Tab** - Configure server URL, API token, and disable duration
+4. **Settings Tab** - Configure server URL, API token, disable duration, and debug options
 5. **Refresh** - Use the refresh icon in the top bar to re-check connectivity
 
 ## API Endpoints Used
@@ -227,6 +228,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Added dashboard stats tab with query statistics
 - Added bottom navigation for Control, Stats, and Settings tabs
 - Added build info display in Settings
+- Added toggle to show/hide debug window on Control tab
 - Default server URL is now blank
 
 ### v0.1 (Initial Release)

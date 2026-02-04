@@ -79,6 +79,7 @@ class MainActivity : ComponentActivity() {
                             isLoading = uiState.isLoading,
                             lastError = uiState.lastError,
                             lastSuccess = uiState.lastSuccess,
+                            showDebug = uiState.settings.showDebug,
                             onDisableBlocking = viewModel::disableBlocking,
                             onCheckStatus = viewModel::checkStatus,
                             onRefresh = viewModel::refreshStatus,
@@ -97,7 +98,8 @@ class MainActivity : ComponentActivity() {
                             settings = uiState.settings,
                             onServerUrlChange = viewModel::updateServerUrl,
                             onApiTokenChange = viewModel::updateApiToken,
-                            onDisableMinutesChange = viewModel::updateDisableMinutes
+                            onDisableMinutesChange = viewModel::updateDisableMinutes,
+                            onShowDebugChange = viewModel::updateShowDebug
                         )
                     }
                 }
