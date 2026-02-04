@@ -91,7 +91,12 @@ class MainActivity : ComponentActivity() {
                             isLoading = uiState.isLoadingStats,
                             isServerReachable = uiState.isServerReachable,
                             lastError = uiState.lastError,
-                            onRefresh = viewModel::fetchDashboardStats
+                            selectedStatsType = uiState.selectedStatsType,
+                            customStartTime = uiState.customStartTime,
+                            customEndTime = uiState.customEndTime,
+                            onStatsTypeChanged = viewModel::setStatsType,
+                            onCustomDateRangeSelected = viewModel::setCustomDateRange,
+                            onRefresh = { viewModel.fetchDashboardStats() }
                         )
                         2 -> SettingsScreen(
                             modifier = Modifier.padding(padding),
@@ -99,7 +104,10 @@ class MainActivity : ComponentActivity() {
                             onServerUrlChange = viewModel::updateServerUrl,
                             onApiTokenChange = viewModel::updateApiToken,
                             onDisableMinutesChange = viewModel::updateDisableMinutes,
-                            onShowDebugChange = viewModel::updateShowDebug
+                            onShowDebugChange = viewModel::updateShowDebug,
+                            onSaveServer = viewModel::saveServer,
+                            onSelectServer = viewModel::selectServer,
+                            onDeleteServer = viewModel::deleteServer
                         )
                     }
                 }

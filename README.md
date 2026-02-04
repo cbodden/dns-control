@@ -6,7 +6,9 @@ A modern Android application for controlling DNS blocking on Technitium DNS Serv
 
 - **One-Tap Disable** - Temporarily disable DNS blocking for a configurable duration (1-120 minutes)
 - **Real-Time Status** - See current blocking status and when it will automatically resume
-- **Dashboard Stats** - View query statistics including total queries, cached, blocked, and client counts
+- **Dashboard Stats** - View query statistics with flexible time ranges (Last Hour, Day, Week, Month, Year, or Custom)
+- **Custom Date Range** - Select specific start/end dates and times for detailed statistics
+- **Saved Server Profiles** - Save multiple server configurations and quickly switch between them
 - **Auto-Connect** - Automatically checks server connectivity and fetches status on app launch
 - **Relative Time Display** - Shows resume time in human-readable format ("in 5 min", "in 1h 30m")
 - **Modern UI** - Beautiful Material 3 dark theme with bottom navigation and smooth animations
@@ -76,8 +78,10 @@ On first launch, tap the **Settings** icon to configure:
 
 | Setting | Description | Example |
 |---------|-------------|---------|
+| **Saved Servers** | Dropdown to select from saved server configurations | `Home DNS` |
 | **Server URL** | Your Technitium DNS server address (without `http://`) | `dns.example.com:5380` |
 | **API Token** | Your Technitium API authentication token | `abc123...` |
+| **Save Server** | Save current URL and token as a named profile | `Save Server Configuration` |
 | **Disable Duration** | How long to disable blocking (1-120 minutes) | `5` |
 | **Show Debug Window** | Display raw JSON response on Control tab | `Off` |
 
@@ -97,13 +101,19 @@ On first launch, tap the **Settings** icon to configure:
    - Resume time if blocking is temporarily disabled
    - "Disable Blocking" button to temporarily disable DNS blocking
    - "Check Status" button to manually refresh the current state
-3. **Stats Tab** - View dashboard statistics for the last hour:
+3. **Stats Tab** - View dashboard statistics:
+   - Select time period from dropdown (Last Hour, Day, Week, Month, Year, or Custom)
+   - Custom date range picker with start/end date and time selection
    - Query summary (total queries, errors, NX domain, refused)
    - Resolution types (authoritative, recursive, cached)
    - Blocking stats (blocked, dropped)
    - Server info (clients, zones, cached entries)
    - Zone lists (allowed/blocked zones, allow/block list counts)
-4. **Settings Tab** - Configure server URL, API token, disable duration, and debug options
+4. **Settings Tab** - Configure and manage server connections:
+   - Save multiple server profiles with custom names
+   - Quick-switch between saved servers via dropdown
+   - Delete saved server profiles
+   - Configure disable duration and debug options
 5. **Refresh** - Use the refresh icon in the top bar to re-check connectivity
 
 ## API Endpoints Used
@@ -131,6 +141,11 @@ GET http://your-server:5380/api/settings/temporaryDisableBlocking?token=YOUR_TOK
 **Get Dashboard Stats (Last Hour):**
 ```
 GET http://your-server:5380/api/dashboard/stats/get?token=YOUR_TOKEN&type=LastHour&utc=true
+```
+
+**Get Dashboard Stats (Custom Range):**
+```
+GET http://your-server:5380/api/dashboard/stats/get?token=YOUR_TOKEN&type=Custom&start=2024-01-01T00:00:00Z&end=2024-01-31T23:59:59Z&utc=true
 ```
 
 ## Project Structure
@@ -225,20 +240,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### v0.2
-
-- Added dashboard stats tab with query statistics
-- Added bottom navigation for Control, Stats, and Settings tabs
-- Added build info display in Settings
-- Added toggle to show/hide debug window on Control tab
-- Default server URL is now blank
-
-### v0.1 (Initial Release)
-
-- Initial release with core functionality
-- Temporary disable blocking with configurable duration
-- Real-time status display with relative time
-- Auto-connect and status check on launch
-- Settings persistence
-- Material 3 dark theme UI
-- Debug mode with raw JSON response display
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
