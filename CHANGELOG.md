@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Apply button to fetch stats for the custom range
 - **Flexible Stats Time Periods** - Choose from Last Hour, Day, Week, Month, Year, or Custom
 - **GitHub Link** - Clickable link to project repository in Settings under build info
+- **Backup & Restore** - Export and import server profiles
+  - Export saved servers to JSON file with date-stamped filename
+  - Import servers from backup file (skips duplicates by URL)
+  - Automatic Google Drive backup via Android Auto Backup
 
 ### Changed
 - Stats dropdown now includes all time period options

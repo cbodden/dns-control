@@ -9,6 +9,7 @@ A modern Android application for controlling DNS blocking on Technitium DNS Serv
 - **Dashboard Stats** - View query statistics with flexible time ranges (Last Hour, Day, Week, Month, Year, or Custom)
 - **Custom Date Range** - Select specific start/end dates and times for detailed statistics
 - **Saved Server Profiles** - Save multiple server configurations and quickly switch between them
+- **Backup & Restore** - Export/import server profiles to JSON files, plus automatic Google Drive backup
 - **Auto-Connect** - Automatically checks server connectivity and fetches status on app launch
 - **Relative Time Display** - Shows resume time in human-readable format ("in 5 min", "in 1h 30m")
 - **Modern UI** - Beautiful Material 3 dark theme with bottom navigation and smooth animations
@@ -114,6 +115,7 @@ On first launch, tap the **Settings** icon to configure:
    - Save multiple server profiles with custom names
    - Quick-switch between saved servers via dropdown
    - Delete saved server profiles
+   - Export/import server profiles to JSON backup files
    - Configure disable duration and debug options
 5. **Refresh** - Use the refresh icon in the top bar to re-check connectivity
 
