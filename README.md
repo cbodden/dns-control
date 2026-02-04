@@ -6,9 +6,10 @@ A modern Android application for controlling DNS blocking on Technitium DNS Serv
 
 - **One-Tap Disable** - Temporarily disable DNS blocking for a configurable duration (1-120 minutes)
 - **Real-Time Status** - See current blocking status and when it will automatically resume
+- **Dashboard Stats** - View query statistics including total queries, cached, blocked, and client counts
 - **Auto-Connect** - Automatically checks server connectivity and fetches status on app launch
 - **Relative Time Display** - Shows resume time in human-readable format ("in 5 min", "in 1h 30m")
-- **Modern UI** - Beautiful Material 3 dark theme with smooth animations
+- **Modern UI** - Beautiful Material 3 dark theme with bottom navigation and smooth animations
 - **Lightweight** - Minimal permissions, no background services, no tracking
 
 ## Screenshots
@@ -87,12 +88,19 @@ On first launch, tap the **Settings** icon to configure:
 ## Usage
 
 1. **Launch the app** - It will automatically connect to your server and fetch the current status
-2. **View Status** - The main screen shows:
+2. **Control Tab** - The main screen shows:
    - Connection status (Connected/Unreachable)
    - Current blocking state (Enabled/Disabled)
    - Resume time if blocking is temporarily disabled
-3. **Disable Blocking** - Tap the blue "Disable Blocking" button to temporarily disable DNS blocking
-4. **Check Status** - Tap "Check Status" to manually refresh the current state
+   - "Disable Blocking" button to temporarily disable DNS blocking
+   - "Check Status" button to manually refresh the current state
+3. **Stats Tab** - View dashboard statistics for the last hour:
+   - Query summary (total queries, errors, NX domain, refused)
+   - Resolution types (authoritative, recursive, cached)
+   - Blocking stats (blocked, dropped)
+   - Server info (clients, zones, cached entries)
+   - Zone lists (allowed/blocked zones, allow/block list counts)
+4. **Settings Tab** - Configure server URL, API token, and disable duration
 5. **Refresh** - Use the refresh icon in the top bar to re-check connectivity
 
 ## API Endpoints Used
@@ -103,6 +111,7 @@ This app communicates with Technitium DNS Server using the following API endpoin
 |----------|--------|---------|
 | `/api/settings/get` | GET | Retrieve current server settings including blocking status |
 | `/api/settings/temporaryDisableBlocking` | GET | Temporarily disable DNS blocking |
+| `/api/dashboard/stats/get` | GET | Retrieve dashboard statistics for the last hour |
 
 ### Example API Calls
 
@@ -114,6 +123,11 @@ GET http://your-server:5380/api/settings/get?token=YOUR_TOKEN
 **Disable Blocking (5 minutes):**
 ```
 GET http://your-server:5380/api/settings/temporaryDisableBlocking?token=YOUR_TOKEN&minutes=5
+```
+
+**Get Dashboard Stats (Last Hour):**
+```
+GET http://your-server:5380/api/dashboard/stats/get?token=YOUR_TOKEN&type=LastHour&utc=true
 ```
 
 ## Project Structure
@@ -133,7 +147,8 @@ app/
 │   │   └── ui/
 │   │       ├── screens/
 │   │       │   ├── MainScreen.kt    # Main control screen UI
-│   │       │   └── SettingsScreen.kt# Settings configuration UI
+│   │       │   ├── SettingsScreen.kt# Settings configuration UI
+│   │       │   └── StatsScreen.kt   # Dashboard statistics UI
 │   │       └── theme/
 │   │           └── Theme.kt         # Material 3 dark theme
 │   └── res/
@@ -206,6 +221,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Material Design 3](https://m3.material.io/) - Design system
 
 ## Changelog
+
+### v0.2
+
+- Added dashboard stats tab with query statistics
+- Added bottom navigation for Control, Stats, and Settings tabs
+- Added build info display in Settings
+- Default server URL is now blank
 
 ### v0.1 (Initial Release)
 

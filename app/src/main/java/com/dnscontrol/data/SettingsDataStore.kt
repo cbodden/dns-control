@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.map
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 data class AppSettings(
-    val serverUrl: String = "dns.poa.local:538",
+    val serverUrl: String = "",
     val apiToken: String = "",
     val disableMinutes: Int = 5
 )
@@ -28,7 +28,7 @@ class SettingsDataStore(private val context: Context) {
     
     val settings: Flow<AppSettings> = context.dataStore.data.map { preferences ->
         AppSettings(
-            serverUrl = preferences[SERVER_URL] ?: "dns.poa.local:538",
+            serverUrl = preferences[SERVER_URL] ?: "",
             apiToken = preferences[API_TOKEN] ?: "",
             disableMinutes = preferences[DISABLE_MINUTES] ?: 5
         )

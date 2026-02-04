@@ -40,6 +40,7 @@ import kotlin.math.abs
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    modifier: Modifier = Modifier,
     settings: AppSettings,
     isServerReachable: Boolean,
     isCheckingReachability: Boolean,
@@ -80,7 +81,7 @@ fun MainScreen(
         }
     ) { padding ->
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background)

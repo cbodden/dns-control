@@ -1,3 +1,6 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -12,8 +15,15 @@ android {
         applicationId = "com.dnscontrol"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1"
+        versionCode = 2
+        versionName = "0.2"
+        
+        val buildTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
+        buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
+    }
+    
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -39,6 +49,12 @@ android {
         compose = true
     }
 }
+
+// Ensure build time is regenerated on each build
+tasks.matching { it.name.contains("generateDebugBuildConfig") || it.name.contains("generateReleaseBuildConfig") }
+    .configureEach {
+        outputs.upToDateWhen { false }
+    }
 
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")

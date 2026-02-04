@@ -18,6 +18,26 @@ data class DisableResponse(
     val message: String
 )
 
+data class DashboardStats(
+    val totalQueries: Long,
+    val totalNoError: Long,
+    val totalServerFailure: Long,
+    val totalNxDomain: Long,
+    val totalRefused: Long,
+    val totalAuthoritative: Long,
+    val totalRecursive: Long,
+    val totalCached: Long,
+    val totalBlocked: Long,
+    val totalDropped: Long,
+    val totalClients: Int,
+    val zones: Int,
+    val cachedEntries: Int,
+    val allowedZones: Int,
+    val blockedZones: Int,
+    val allowListZones: Int,
+    val blockListZones: Long
+)
+
 class ApiService {
     
     private val client = OkHttpClient.Builder()
@@ -120,6 +140,57 @@ class ApiService {
                     success = true,
                     message = "Blocking disabled for $minutes minutes"
                 ))
+            } else {
+                Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    suspend fun getDashboardStats(serverUrl: String, token: String): Result<DashboardStats> = withContext(Dispatchers.IO) {
+        try {
+            val url = "http://$serverUrl/api/dashboard/stats/get?token=$token&type=LastHour&utc=true"
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            
+            val response = client.newCall(request).execute()
+            val body = response.body?.string() ?: ""
+            
+            if (response.isSuccessful) {
+                val json = JSONObject(body)
+                val responseObj = json.optJSONObject("response")
+                
+                // Try to get stats from response.stats first, then fall back to response directly
+                val stats = responseObj?.optJSONObject("stats") ?: responseObj
+                
+                if (stats != null && stats.has("totalQueries")) {
+                    Result.success(DashboardStats(
+                        totalQueries = stats.optLong("totalQueries", 0),
+                        totalNoError = stats.optLong("totalNoError", 0),
+                        totalServerFailure = stats.optLong("totalServerFailure", 0),
+                        totalNxDomain = stats.optLong("totalNxDomain", 0),
+                        totalRefused = stats.optLong("totalRefused", 0),
+                        totalAuthoritative = stats.optLong("totalAuthoritative", 0),
+                        totalRecursive = stats.optLong("totalRecursive", 0),
+                        totalCached = stats.optLong("totalCached", 0),
+                        totalBlocked = stats.optLong("totalBlocked", 0),
+                        totalDropped = stats.optLong("totalDropped", 0),
+                        totalClients = stats.optInt("totalClients", 0),
+                        zones = stats.optInt("zones", 0),
+                        cachedEntries = stats.optInt("cachedEntries", 0),
+                        allowedZones = stats.optInt("allowedZones", 0),
+                        blockedZones = stats.optInt("blockedZones", 0),
+                        allowListZones = stats.optInt("allowListZones", 0),
+                        blockListZones = stats.optLong("blockListZones", 0)
+                    ))
+                } else {
+                    // Provide more context about what we received
+                    val keys = if (responseObj != null) responseObj.keys().asSequence().toList() else emptyList()
+                    Result.failure(Exception("Invalid response format. Keys found: $keys"))
+                }
             } else {
                 Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
             }
