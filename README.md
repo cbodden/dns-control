@@ -14,9 +14,9 @@ A modern Android application for controlling DNS blocking on Technitium DNS Serv
 ## Screenshots
 
 <p align="center">
-  <img src="images/screenshot_connected.png" width="300" alt="Connected Status">
+  <img src="images/main.jpeg" width="300" alt="Main Window">
   &nbsp;&nbsp;&nbsp;
-  <img src="images/screenshot_disabled.png" width="300" alt="Blocking Disabled">
+  <img src="images/settings.jpeg" width="300" alt="Settings Window">
 </p>
 
 ## Requirements
