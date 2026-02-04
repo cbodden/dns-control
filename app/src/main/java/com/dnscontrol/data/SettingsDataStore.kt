@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import org.json.JSONArray
 import org.json.JSONObject
@@ -154,6 +155,51 @@ class SettingsDataStore(private val context: Context) {
             preferences[SELECTED_SERVER_ID] = server.id
             preferences[SERVER_URL] = server.serverUrl
             preferences[API_TOKEN] = server.apiToken
+        }
+    }
+    
+    suspend fun exportServers(): String {
+        val currentSettings = settings.first()
+        val exportData = JSONObject().apply {
+            put("version", 1)
+            put("servers", JSONArray().apply {
+                currentSettings.savedServers.forEach { put(it.toJson()) }
+            })
+        }
+        return exportData.toString(2)
+    }
+    
+    suspend fun importServers(jsonString: String): Result<Int> {
+        return try {
+            val importData = JSONObject(jsonString)
+            val serversArray = importData.getJSONArray("servers")
+            val importedServers = (0 until serversArray.length()).map { i ->
+                SavedServer.fromJson(serversArray.getJSONObject(i))
+            }
+            
+            context.dataStore.edit { preferences ->
+                val currentJson = preferences[SAVED_SERVERS] ?: "[]"
+                val currentServers = parseSavedServers(currentJson).toMutableList()
+                
+                var addedCount = 0
+                importedServers.forEach { imported ->
+                    // Check if server with same URL already exists
+                    val existingIndex = currentServers.indexOfFirst { 
+                        it.serverUrl == imported.serverUrl 
+                    }
+                    if (existingIndex < 0) {
+                        // Add with new ID to avoid conflicts
+                        currentServers.add(imported.copy(id = System.currentTimeMillis().toString() + addedCount))
+                        addedCount++
+                    }
+                }
+                
+                preferences[SAVED_SERVERS] = savedServersToJson(currentServers)
+            }
+            
+            Result.success(importedServers.size)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }

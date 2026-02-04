@@ -11,10 +11,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -45,7 +47,9 @@ fun SettingsScreen(
     onShowDebugChange: (Boolean) -> Unit,
     onSaveServer: (String, String, String) -> Unit,
     onSelectServer: (SavedServer) -> Unit,
-    onDeleteServer: (String) -> Unit
+    onDeleteServer: (String) -> Unit,
+    onExportServers: () -> Unit,
+    onImportServers: () -> Unit
 ) {
     var serverUrl by remember(settings.serverUrl) { mutableStateOf(settings.serverUrl) }
     var apiToken by remember(settings.apiToken) { mutableStateOf(settings.apiToken) }
@@ -322,6 +326,59 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Save Server Configuration")
                     }
+                }
+            }
+            
+            // Backup & Restore
+            SettingsSection(title = "Backup & Restore") {
+                Text(
+                    text = "Export your saved server profiles to a file or import from a backup. Profiles are also automatically backed up to Google Drive if enabled on your device.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 16.sp
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onExportServers,
+                        modifier = Modifier.weight(1f),
+                        enabled = settings.savedServers.isNotEmpty()
+                    ) {
+                        Icon(
+                            Icons.Default.Upload,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Export")
+                    }
+                    
+                    OutlinedButton(
+                        onClick = onImportServers,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            Icons.Default.Download,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Import")
+                    }
+                }
+                
+                if (settings.savedServers.isEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "No servers saved to export",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
                 }
             }
             

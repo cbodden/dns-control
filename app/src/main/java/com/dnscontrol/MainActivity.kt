@@ -1,8 +1,11 @@
 package com.dnscontrol
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -19,12 +22,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.dnscontrol.ui.screens.MainScreen
 import com.dnscontrol.ui.screens.SettingsScreen
 import com.dnscontrol.ui.screens.StatsScreen
 import com.dnscontrol.ui.theme.DNSControlTheme
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     
@@ -32,11 +40,50 @@ class MainActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val context = this
         
         setContent {
             DNSControlTheme {
                 val uiState by viewModel.uiState.collectAsState()
                 var selectedTab by remember { mutableIntStateOf(0) }
+                val coroutineScope = rememberCoroutineScope()
+                
+                // File picker for export
+                val exportLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.CreateDocument("application/json")
+                ) { uri ->
+                    uri?.let {
+                        coroutineScope.launch {
+                            try {
+                                val exportData = viewModel.exportServers()
+                                contentResolver.openOutputStream(uri)?.use { outputStream ->
+                                    outputStream.write(exportData.toByteArray())
+                                }
+                                Toast.makeText(context, "Servers exported successfully", Toast.LENGTH_SHORT).show()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }
+                
+                // File picker for import
+                val importLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.OpenDocument()
+                ) { uri ->
+                    uri?.let {
+                        try {
+                            contentResolver.openInputStream(uri)?.use { inputStream ->
+                                val jsonString = inputStream.bufferedReader().readText()
+                                viewModel.importServers(jsonString) { success, message ->
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
                 
                 // Fetch stats when switching to stats tab and server is reachable
                 LaunchedEffect(selectedTab, uiState.isServerReachable) {
@@ -107,7 +154,15 @@ class MainActivity : ComponentActivity() {
                             onShowDebugChange = viewModel::updateShowDebug,
                             onSaveServer = viewModel::saveServer,
                             onSelectServer = viewModel::selectServer,
-                            onDeleteServer = viewModel::deleteServer
+                            onDeleteServer = viewModel::deleteServer,
+                            onExportServers = {
+                                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                val fileName = "dns-control-servers-${dateFormat.format(Date())}.json"
+                                exportLauncher.launch(fileName)
+                            },
+                            onImportServers = {
+                                importLauncher.launch(arrayOf("application/json", "*/*"))
+                            }
                         )
                     }
                 }

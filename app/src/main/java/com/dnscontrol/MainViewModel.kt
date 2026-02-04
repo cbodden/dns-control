@@ -318,4 +318,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             settingsDataStore.updateApiToken("")
         }
     }
+    
+    suspend fun exportServers(): String {
+        return settingsDataStore.exportServers()
+    }
+    
+    fun importServers(jsonString: String, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val result = settingsDataStore.importServers(jsonString)
+            result.fold(
+                onSuccess = { count ->
+                    onResult(true, "Imported $count server(s)")
+                },
+                onFailure = { error ->
+                    onResult(false, "Import failed: ${error.message}")
+                }
+            )
+        }
+    }
 }
