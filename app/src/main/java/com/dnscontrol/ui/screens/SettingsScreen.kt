@@ -6,7 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Timer
@@ -18,18 +18,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dnscontrol.BuildConfig
 import com.dnscontrol.data.AppSettings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    modifier: Modifier = Modifier,
     settings: AppSettings,
     onServerUrlChange: (String) -> Unit,
     onApiTokenChange: (String) -> Unit,
     onDisableMinutesChange: (Int) -> Unit,
-    onNavigateBack: () -> Unit
+    onShowDebugChange: (Boolean) -> Unit
 ) {
     var serverUrl by remember(settings) { mutableStateOf(settings.serverUrl) }
     var apiToken by remember(settings) { mutableStateOf(settings.apiToken) }
@@ -40,11 +44,6 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Settings") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -52,7 +51,7 @@ fun SettingsScreen(
         }
     ) { padding ->
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
@@ -68,7 +67,7 @@ fun SettingsScreen(
                         onServerUrlChange(it)
                     },
                     label = { Text("Server URL") },
-                    placeholder = { Text("dns.poa.local:538") },
+                    placeholder = { Text("server.example.com:5380") },
                     leadingIcon = {
                         Icon(Icons.Default.Storage, contentDescription = null)
                     },
@@ -153,6 +152,42 @@ fun SettingsScreen(
                 }
             }
             
+            // Debug Settings
+            SettingsSection(title = "Debug") {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.BugReport,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Show Debug Window",
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Display raw JSON response on Control tab",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = settings.showDebug,
+                        onCheckedChange = onShowDebugChange
+                    )
+                }
+            }
+            
             // Info Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -176,6 +211,27 @@ fun SettingsScreen(
                     )
                 }
             }
+            
+            // Build Info
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "DNS Control v${BuildConfig.VERSION_NAME}",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = "Build ${BuildConfig.VERSION_CODE} • ${BuildConfig.BUILD_TIME}",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    textAlign = TextAlign.Center
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

@@ -3,6 +3,7 @@ package com.dnscontrol.data
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -13,9 +14,10 @@ import kotlinx.coroutines.flow.map
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 data class AppSettings(
-    val serverUrl: String = "dns.poa.local:538",
+    val serverUrl: String = "",
     val apiToken: String = "",
-    val disableMinutes: Int = 5
+    val disableMinutes: Int = 5,
+    val showDebug: Boolean = false
 )
 
 class SettingsDataStore(private val context: Context) {
@@ -24,13 +26,15 @@ class SettingsDataStore(private val context: Context) {
         private val SERVER_URL = stringPreferencesKey("server_url")
         private val API_TOKEN = stringPreferencesKey("api_token")
         private val DISABLE_MINUTES = intPreferencesKey("disable_minutes")
+        private val SHOW_DEBUG = booleanPreferencesKey("show_debug")
     }
     
     val settings: Flow<AppSettings> = context.dataStore.data.map { preferences ->
         AppSettings(
-            serverUrl = preferences[SERVER_URL] ?: "dns.poa.local:538",
+            serverUrl = preferences[SERVER_URL] ?: "",
             apiToken = preferences[API_TOKEN] ?: "",
-            disableMinutes = preferences[DISABLE_MINUTES] ?: 5
+            disableMinutes = preferences[DISABLE_MINUTES] ?: 5,
+            showDebug = preferences[SHOW_DEBUG] ?: false
         )
     }
     
@@ -49,6 +53,12 @@ class SettingsDataStore(private val context: Context) {
     suspend fun updateDisableMinutes(minutes: Int) {
         context.dataStore.edit { preferences ->
             preferences[DISABLE_MINUTES] = minutes.coerceIn(1, 120)
+        }
+    }
+    
+    suspend fun updateShowDebug(show: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[SHOW_DEBUG] = show
         }
     }
 }

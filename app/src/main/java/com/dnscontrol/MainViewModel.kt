@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.dnscontrol.data.AppSettings
 import com.dnscontrol.data.SettingsDataStore
 import com.dnscontrol.network.ApiService
+import com.dnscontrol.network.DashboardStats
 import com.dnscontrol.network.StatusResponse
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -15,6 +16,8 @@ data class MainUiState(
     val isServerReachable: Boolean = false,
     val isCheckingReachability: Boolean = true,
     val statusResponse: StatusResponse? = null,
+    val dashboardStats: DashboardStats? = null,
+    val isLoadingStats: Boolean = false,
     val isLoading: Boolean = false,
     val lastError: String? = null,
     val lastSuccess: String? = null
@@ -203,5 +206,45 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     
     fun clearMessages() {
         _uiState.update { it.copy(lastError = null, lastSuccess = null) }
+    }
+    
+    fun updateShowDebug(show: Boolean) {
+        viewModelScope.launch {
+            settingsDataStore.updateShowDebug(show)
+        }
+    }
+    
+    fun fetchDashboardStats() {
+        val settings = _uiState.value.settings
+        if (settings.serverUrl.isEmpty() || settings.apiToken.isEmpty()) {
+            _uiState.update { it.copy(lastError = "Please configure server URL and API token") }
+            return
+        }
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingStats = true, lastError = null) }
+            
+            val result = apiService.getDashboardStats(settings.serverUrl, settings.apiToken)
+            
+            result.fold(
+                onSuccess = { stats ->
+                    _uiState.update { 
+                        it.copy(
+                            dashboardStats = stats,
+                            isLoadingStats = false,
+                            lastError = null
+                        )
+                    }
+                },
+                onFailure = { error ->
+                    _uiState.update { 
+                        it.copy(
+                            isLoadingStats = false,
+                            lastError = "Error fetching stats: ${error.message}"
+                        )
+                    }
+                }
+            )
+        }
     }
 }
