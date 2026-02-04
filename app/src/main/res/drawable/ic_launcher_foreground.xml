@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- DNS shield icon -->
+    <path
+        android:fillColor="#4FC3F7"
+        android:pathData="M54,24 L24,36 L24,54 C24,72 36,88 54,94 C72,88 84,72 84,54 L84,36 L54,24 Z"/>
+    
+    <path
+        android:fillColor="#1a1a2e"
+        android:pathData="M54,30 L30,40 L30,54 C30,68 40,82 54,87 C68,82 78,68 78,54 L78,40 L54,30 Z"/>
+    
+    <path
+        android:fillColor="#4FC3F7"
+        android:pathData="M48,50 L44,54 L52,62 L68,46 L64,42 L52,54 Z"/>
+</vector>
