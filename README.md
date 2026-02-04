@@ -29,7 +29,7 @@ A modern Android application for controlling DNS blocking on Technitium DNS Serv
 
 ### Download APK
 
-Download the latest APK from the [Releases](https://github.com/YOUR_USERNAME/dns-control/releases) page.
+Download the latest APK from the [Releases](https://github.com/cbodden/dns-control/releases) page.
 
 ### Build from Source
 
