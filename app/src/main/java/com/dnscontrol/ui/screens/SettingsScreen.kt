@@ -1,15 +1,22 @@
 package com.dnscontrol.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -19,11 +26,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dnscontrol.BuildConfig
 import com.dnscontrol.data.AppSettings
+import com.dnscontrol.data.SavedServer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,12 +44,93 @@ fun SettingsScreen(
     onServerUrlChange: (String) -> Unit,
     onApiTokenChange: (String) -> Unit,
     onDisableMinutesChange: (Int) -> Unit,
-    onShowDebugChange: (Boolean) -> Unit
+    onShowDebugChange: (Boolean) -> Unit,
+    onSaveServer: (String, String, String) -> Unit,
+    onSelectServer: (SavedServer) -> Unit,
+    onDeleteServer: (String) -> Unit,
+    onExportServers: () -> Unit,
+    onImportServers: () -> Unit
 ) {
-    var serverUrl by remember(settings) { mutableStateOf(settings.serverUrl) }
-    var apiToken by remember(settings) { mutableStateOf(settings.apiToken) }
+    var serverUrl by remember(settings.serverUrl) { mutableStateOf(settings.serverUrl) }
+    var apiToken by remember(settings.apiToken) { mutableStateOf(settings.apiToken) }
     var disableMinutes by remember(settings) { mutableStateOf(settings.disableMinutes.toString()) }
     var showToken by remember { mutableStateOf(false) }
+    var showSaveDialog by remember { mutableStateOf(false) }
+    var serverNameInput by remember { mutableStateOf("") }
+    var showServerDropdown by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf<SavedServer?>(null) }
+    
+    // Save Server Dialog
+    if (showSaveDialog) {
+        AlertDialog(
+            onDismissRequest = { showSaveDialog = false },
+            title = { Text("Save Server") },
+            text = {
+                Column {
+                    Text(
+                        "Enter a name for this server configuration:",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = serverNameInput,
+                        onValueChange = { serverNameInput = it },
+                        label = { Text("Server Name") },
+                        placeholder = { Text("e.g., Home DNS, Office DNS") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (serverNameInput.isNotBlank() && serverUrl.isNotBlank() && apiToken.isNotBlank()) {
+                            onSaveServer(serverNameInput.trim(), serverUrl, apiToken)
+                            serverNameInput = ""
+                            showSaveDialog = false
+                        }
+                    },
+                    enabled = serverNameInput.isNotBlank()
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showSaveDialog = false
+                    serverNameInput = ""
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Delete Confirmation Dialog
+    showDeleteConfirm?.let { server ->
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = null },
+            title = { Text("Delete Server") },
+            text = { Text("Are you sure you want to delete \"${server.name}\"?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeleteServer(server.id)
+                        showDeleteConfirm = null
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
     
     Scaffold(
         topBar = {
@@ -60,6 +152,118 @@ fun SettingsScreen(
         ) {
             // Server Configuration
             SettingsSection(title = "Server Configuration") {
+                // Saved Servers Dropdown
+                if (settings.savedServers.isNotEmpty()) {
+                    val selectedServer = settings.savedServers.find { it.id == settings.selectedServerId }
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedCard(
+                                onClick = { showServerDropdown = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Saved Servers",
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = selectedServer?.name ?: "Select a server...",
+                                            fontSize = 16.sp,
+                                            color = if (selectedServer != null) 
+                                                MaterialTheme.colorScheme.onSurface 
+                                            else 
+                                                MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    Icon(
+                                        Icons.Default.ArrowDropDown,
+                                        contentDescription = "Select server",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        
+                            DropdownMenu(
+                                expanded = showServerDropdown,
+                                onDismissRequest = { showServerDropdown = false },
+                                modifier = Modifier.fillMaxWidth(0.9f)
+                            ) {
+                                settings.savedServers.forEach { server ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(
+                                                    text = server.name,
+                                                    fontWeight = if (server.id == settings.selectedServerId) 
+                                                        androidx.compose.ui.text.font.FontWeight.Bold 
+                                                    else 
+                                                        androidx.compose.ui.text.font.FontWeight.Normal
+                                                )
+                                                Text(
+                                                    text = server.serverUrl,
+                                                    fontSize = 12.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            onSelectServer(server)
+                                            showServerDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Delete button - visible when a server is selected
+                        if (selectedServer != null) {
+                            FilledTonalIconButton(
+                                onClick = { showDeleteConfirm = selectedServer },
+                                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                                    contentColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Delete server"
+                                )
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
+                    
+                    Text(
+                        text = "Or enter new server details:",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                
                 OutlinedTextField(
                     value = serverUrl,
                     onValueChange = { 
@@ -105,6 +309,77 @@ fun SettingsScreen(
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true
                 )
+                
+                // Save Server Button
+                if (serverUrl.isNotBlank() && apiToken.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    OutlinedButton(
+                        onClick = { showSaveDialog = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            Icons.Default.Save,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Save Server Configuration")
+                    }
+                }
+            }
+            
+            // Backup & Restore
+            SettingsSection(title = "Backup & Restore") {
+                Text(
+                    text = "Export your saved server profiles to a file or import from a backup. Profiles are also automatically backed up to Google Drive if enabled on your device.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 16.sp
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onExportServers,
+                        modifier = Modifier.weight(1f),
+                        enabled = settings.savedServers.isNotEmpty()
+                    ) {
+                        Icon(
+                            Icons.Default.Upload,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Export")
+                    }
+                    
+                    OutlinedButton(
+                        onClick = onImportServers,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            Icons.Default.Download,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Import")
+                    }
+                }
+                
+                if (settings.savedServers.isEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "No servers saved to export",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
             }
             
             // Disable Duration
@@ -214,6 +489,7 @@ fun SettingsScreen(
             
             // Build Info
             Spacer(modifier = Modifier.height(16.dp))
+            val uriHandler = LocalUriHandler.current
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -229,6 +505,17 @@ fun SettingsScreen(
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                     textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "GitHub",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center,
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier.clickable {
+                        uriHandler.openUri("https://github.com/cbodden/dns-control/tree/main")
+                    }
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))

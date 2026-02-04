@@ -4,9 +4,11 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.dnscontrol.data.AppSettings
+import com.dnscontrol.data.SavedServer
 import com.dnscontrol.data.SettingsDataStore
 import com.dnscontrol.network.ApiService
 import com.dnscontrol.network.DashboardStats
+import com.dnscontrol.network.StatsType
 import com.dnscontrol.network.StatusResponse
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -17,6 +19,9 @@ data class MainUiState(
     val isCheckingReachability: Boolean = true,
     val statusResponse: StatusResponse? = null,
     val dashboardStats: DashboardStats? = null,
+    val selectedStatsType: StatsType = StatsType.LastHour,
+    val customStartTime: String? = null,
+    val customEndTime: String? = null,
     val isLoadingStats: Boolean = false,
     val isLoading: Boolean = false,
     val lastError: String? = null,
@@ -214,17 +219,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
-    fun fetchDashboardStats() {
+    fun fetchDashboardStats(statsType: StatsType? = null) {
         val settings = _uiState.value.settings
         if (settings.serverUrl.isEmpty() || settings.apiToken.isEmpty()) {
             _uiState.update { it.copy(lastError = "Please configure server URL and API token") }
             return
         }
         
+        val typeToFetch = statsType ?: _uiState.value.selectedStatsType
+        val state = _uiState.value
+        
+        // For custom type, require both start and end times
+        if (typeToFetch == StatsType.Custom && (state.customStartTime == null || state.customEndTime == null)) {
+            _uiState.update { it.copy(lastError = "Please select both start and end times") }
+            return
+        }
+        
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingStats = true, lastError = null) }
             
-            val result = apiService.getDashboardStats(settings.serverUrl, settings.apiToken)
+            val result = apiService.getDashboardStats(
+                serverUrl = settings.serverUrl,
+                token = settings.apiToken,
+                statsType = typeToFetch,
+                customStart = if (typeToFetch == StatsType.Custom) state.customStartTime else null,
+                customEnd = if (typeToFetch == StatsType.Custom) state.customEndTime else null
+            )
             
             result.fold(
                 onSuccess = { stats ->
@@ -243,6 +263,75 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             lastError = "Error fetching stats: ${error.message}"
                         )
                     }
+                }
+            )
+        }
+    }
+    
+    fun setStatsType(statsType: StatsType) {
+        _uiState.update { it.copy(selectedStatsType = statsType) }
+        // Don't auto-fetch for Custom type - wait for date selection
+        if (statsType != StatsType.Custom) {
+            fetchDashboardStats(statsType)
+        }
+    }
+    
+    fun setCustomDateRange(startTime: String, endTime: String) {
+        _uiState.update { 
+            it.copy(
+                customStartTime = startTime,
+                customEndTime = endTime
+            )
+        }
+        fetchDashboardStats(StatsType.Custom)
+    }
+    
+    fun saveServer(name: String, serverUrl: String, apiToken: String) {
+        viewModelScope.launch {
+            val server = SavedServer(
+                id = System.currentTimeMillis().toString(),
+                name = name,
+                serverUrl = serverUrl,
+                apiToken = apiToken
+            )
+            settingsDataStore.saveServer(server)
+            settingsDataStore.selectServerAndApply(server)
+        }
+    }
+    
+    fun selectServer(server: SavedServer) {
+        viewModelScope.launch {
+            settingsDataStore.selectServerAndApply(server)
+        }
+    }
+    
+    fun deleteServer(serverId: String) {
+        viewModelScope.launch {
+            settingsDataStore.deleteServer(serverId)
+        }
+    }
+    
+    fun clearServerSelection() {
+        viewModelScope.launch {
+            settingsDataStore.selectServer(null)
+            settingsDataStore.updateServerUrl("")
+            settingsDataStore.updateApiToken("")
+        }
+    }
+    
+    suspend fun exportServers(): String {
+        return settingsDataStore.exportServers()
+    }
+    
+    fun importServers(jsonString: String, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val result = settingsDataStore.importServers(jsonString)
+            result.fold(
+                onSuccess = { count ->
+                    onResult(true, "Imported $count server(s)")
+                },
+                onFailure = { error ->
+                    onResult(false, "Import failed: ${error.message}")
                 }
             )
         }

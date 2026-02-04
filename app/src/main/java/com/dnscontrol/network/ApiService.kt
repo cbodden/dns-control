@@ -18,6 +18,15 @@ data class DisableResponse(
     val message: String
 )
 
+enum class StatsType(val apiValue: String, val displayName: String) {
+    LastHour("LastHour", "Last Hour"),
+    LastDay("LastDay", "Last Day"),
+    LastWeek("LastWeek", "Last Week"),
+    LastMonth("LastMonth", "Last Month"),
+    LastYear("LastYear", "Last Year"),
+    Custom("Custom", "Custom")
+}
+
 data class DashboardStats(
     val totalQueries: Long,
     val totalNoError: Long,
@@ -148,9 +157,20 @@ class ApiService {
         }
     }
     
-    suspend fun getDashboardStats(serverUrl: String, token: String): Result<DashboardStats> = withContext(Dispatchers.IO) {
+    suspend fun getDashboardStats(
+        serverUrl: String,
+        token: String,
+        statsType: StatsType = StatsType.LastHour,
+        customStart: String? = null,
+        customEnd: String? = null
+    ): Result<DashboardStats> = withContext(Dispatchers.IO) {
         try {
-            val url = "http://$serverUrl/api/dashboard/stats/get?token=$token&type=LastHour&utc=true"
+            val url = buildString {
+                append("http://$serverUrl/api/dashboard/stats/get?token=$token&type=${statsType.apiValue}&utc=true")
+                if (statsType == StatsType.Custom && customStart != null && customEnd != null) {
+                    append("&start=$customStart&end=$customEnd")
+                }
+            }
             val request = Request.Builder()
                 .url(url)
                 .get()
