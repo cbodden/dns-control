@@ -41,6 +41,15 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
+            output.outputFileName = "dns-control-${variant.versionName}-${date}.apk"
+        }
+    }
+
     kotlinOptions {
         jvmTarget = "11"
     }
